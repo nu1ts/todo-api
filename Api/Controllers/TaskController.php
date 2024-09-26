@@ -4,6 +4,7 @@ namespace Api\Controllers;
 
 use Api\Models\Task;
 use Api\Utils\Response;
+use Api\Utils\Validator;
 
 class TaskController
 {
@@ -21,23 +22,55 @@ class TaskController
     public function store()
     {
         $data = json_decode(file_get_contents('php://input'), true);
-        if (isset($data['title'], $data['list_id'])) {
-            $taskId = Task::addTask($data);
-            Response::created(['success' => true, 'id' => $taskId]);
-        } else {
-            Response::badRequest('Missing title or list_id');
+        $error = Validator::required($data, ['title', 'list_id']);
+        if ($error) {
+            Response::badRequest($error);
+            return;
         }
+        $error = Validator::maxLength('title', $data['title'], 255);
+        if ($error) {
+            Response::badRequest($error);
+            return;
+        }
+        $error = Validator::integer('list_id', $data['list_id']);
+        if ($error) {
+            Response::badRequest($error);
+            return;
+        }
+        $taskId = Task::addTask($data);
+        Response::created(['success' => true, 'id' => $taskId]);
     }
 
     public function update()
     {
         $data = json_decode(file_get_contents('php://input'), true);
-        if (isset($data['id'], $data['title'])) {
-            Task::updateTask($data);
-            Response::success(['success' => true]);
-        } else {
-            Response::badRequest('Missing task ID or title');
+
+        if (!isset($data['id'])) {
+            Response::badRequest('Task ID is required');
+            return;
         }
+
+        $updateFields = [];
+        if (isset($data['title'])) {
+            $error = Validator::maxLength('title', $data['title'], 255);
+            if ($error) {
+                Response::badRequest($error);
+                return;
+            }
+            $updateFields['title'] = $data['title'];
+        }
+
+        if (isset($data['description'])) {
+            $updateFields['description'] = $data['description'];
+        }
+
+        if (empty($updateFields)) {
+            Response::badRequest('No fields to update');
+            return;
+        }
+
+        Task::updateTask($data['id'], $updateFields);
+        Response::success(['success' => true]);
     }
 
     public function toggleStatus()
@@ -65,26 +98,46 @@ class TaskController
     public function upload()
     {
         $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (isset($data['list_id'], $data['tasks']) && is_array($data['tasks'])) {
-            $listId = $data['list_id'];
-            $tasks = $data['tasks'];
-            
-            Task::deleteTasksByList($listId);
-            
-            foreach ($tasks as $task) {
-                if (isset($task['title'])) {
-                    Task::addTask([
-                        'title' => $task['title'],
-                        'description' => $task['description'] ?? '',
-                        'list_id' => $listId
-                    ]);
-                }
-            }
-            
-            Response::created(['success' => true, 'message' => 'List uploaded successfully']);
-        } else {
-            Response::badRequest('Invalid input data');
+
+        $error = Validator::required($data, ['list_id', 'tasks']);
+        if ($error) {
+            Response::badRequest($error);
+            return;
         }
+
+        $error = Validator::integer('list_id', $data['list_id']);
+        if ($error) {
+            Response::badRequest($error);
+            return;
+        }
+
+        if (!is_array($data['tasks'])) {
+            Response::badRequest('Tasks should be an array');
+            return;
+        }
+
+        Task::deleteTasksByList($data['list_id']);
+
+        foreach ($data['tasks'] as $task) {
+            $error = Validator::required($task, ['title']);
+            if ($error) {
+                Response::badRequest($error);
+                return;
+            }
+
+            $error = Validator::maxLength('title', $task['title'], 255);
+            if ($error) {
+                Response::badRequest($error);
+                return;
+            }
+
+            Task::addTask([
+                'title' => $task['title'],
+                'description' => $task['description'] ?? '',
+                'list_id' => $data['list_id']
+            ]);
+        }
+
+        Response::created(['success' => true, 'message' => 'List uploaded successfully']);
     }
 }

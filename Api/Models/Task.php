@@ -28,11 +28,25 @@ class Task
         return $pdo->lastInsertId();
     }
 
-    public static function updateTask($data)
+    public static function updateTask($id, $fields)
     {
         $pdo = self::getConnection();
-        $stmt = $pdo->prepare("UPDATE tasks SET title = ?, description = ? WHERE id = ?");
-        $stmt->execute([$data['title'], $data['description'], $data['id']]);
+        $setClause = [];
+        $params = [];
+        if (isset($fields['title'])) {
+            $setClause[] = 'title = ?';
+            $params[] = $fields['title'];
+        }
+        if (isset($fields['description'])) {
+            $setClause[] = 'description = ?';
+            $params[] = $fields['description'];
+        }
+        $params[] = $id;
+        if (!empty($setClause)) {
+            $sql = 'UPDATE tasks SET ' . implode(', ', $setClause) . ' WHERE id = ?';
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+        }
     }
 
     public static function toggleTaskStatus($id)
