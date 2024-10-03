@@ -6,6 +6,8 @@ services:
       - .:/var/www/html
     ports:
       - "8080:80"
+    networks:
+      - todo-network
     environment:
       - DATABASE_HOST=db
       - DATABASE_NAME=todo_db
@@ -23,6 +25,12 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - db-data:/var/lib/postgresql/data
+    networks:
+      - todo-network
 
 volumes:
   db-data:
+
+networks:
+  todo-network:
+    driver: bridge
