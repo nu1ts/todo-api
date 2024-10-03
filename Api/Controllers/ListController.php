@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Controllers;
+namespace api\controllers;
 
-use Api\Models\ListModel;
-use Api\Utils\Response;
-use Api\Utils\Validator;
+use api\models\listModel;
+use api\utils\response;
+use api\utils\validator;
 
 class ListController
 {

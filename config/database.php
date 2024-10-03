@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'dsn' => 'pgsql:host=localhost;dbname=todo_db',
-    'username' => 'todo_user',
-    'password' => 'password'
+    'dsn' => 'pgsql:host=' . getenv('DATABASE_HOST') . ';dbname=' . getenv('DATABASE_NAME'),
+    'username' => getenv('DATABASE_USER'),
+    'password' => getenv('DATABASE_PASSWORD')
 ];

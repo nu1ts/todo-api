@@ -1,8 +1,8 @@
 <?php
 
-use Api\Controllers\TaskController;
-use Api\Controllers\ListController;
-use Api\Utils\Response;
+use api\controllers\taskController;
+use api\controllers\listController;
+use api\utils\response;
 
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

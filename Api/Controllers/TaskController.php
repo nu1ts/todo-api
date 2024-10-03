@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Controllers;
+namespace api\controllers;
 
-use Api\Models\Task;
-use Api\Utils\Response;
-use Api\Utils\Validator;
+use api\models\task;
+use api\utils\response;
+use api\utils\validator;
 
 class TaskController
 {
