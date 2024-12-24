@@ -1,36 +1,58 @@
 services:
   app:
-    build: .
-    container_name: php-app
-    volumes:
-      - .:/var/www/html
-    ports:
-      - "8080:80"
-    networks:
-      - todo-network
-    environment:
-      - DATABASE_HOST=db
-      - DATABASE_NAME=todo_db
-      - DATABASE_USER=todo_user
-      - DATABASE_PASSWORD=password
+    image: app:latest
+    container_name: ${APP_CONTAINER_NAME}
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - db
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT}:${APP_INTERNAL_PORT}"
+    restart: on-failure
+    networks:
+      - default
+      - internal_network
+    deploy:
+      resources:
+        limits:
+          cpus: ${APP_CPU_LIMIT}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${APP_INTERNAL_PORT}/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - .:/var/www/html
 
   db:
-    image: postgres:15
-    container_name: postgres-db
+    image: postgres:15-alpine
+    container_name: ${DB_CONTAINER_NAME}
+    hostname: ${DB_HOSTNAME}
+    expose:
+      - ${DB_PORT}
     environment:
-      POSTGRES_DB: todo_db
-      POSTGRES_USER: todo_user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    restart: on-failure
+    networks:
+      - internal_network
     volumes:
       - db-data:/var/lib/postgresql/data
-    networks:
-      - todo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME} -h 127.0.0.1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+
+networks:
+  default:
+  internal_network:
 
 volumes:
   db-data:
-
-networks:
-  todo-network:
-    driver: bridge

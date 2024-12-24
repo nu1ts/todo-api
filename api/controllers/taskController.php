@@ -140,4 +140,9 @@ class TaskController
 
         Response::created(['success' => true, 'message' => 'List uploaded successfully']);
     }
+
+    public function health()
+    {
+        Response::success(['status' => 'ok']);
+    }
 }

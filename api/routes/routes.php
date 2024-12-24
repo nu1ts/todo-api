@@ -12,6 +12,7 @@ $routes = [
         '/tasks' => [TaskController::class, 'index'],
         '/lists' => [ListController::class, 'index'],
         '/lists/{id}' => [ListController::class, 'show'],
+        '/health' => [TaskController::class, 'health'],
     ],
     'POST' => [
         '/tasks' => [TaskController::class, 'store'],
